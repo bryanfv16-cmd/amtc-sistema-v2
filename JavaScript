@@ -5,7 +5,6 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const QRCode = require('qrcode');
-const { Pool } = require('pg');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -24,30 +23,7 @@ app.use('/public', express.static('public'));
 if (!process.env.DATABASE_URL) {
   console.error('Falta DATABASE_URL. En Railway agrega PostgreSQL y enlaza las variables.');
 }
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') ? { rejectUnauthorized: false } : false
-});
-
-async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS certificados (
-      id SERIAL PRIMARY KEY,
-      codigo TEXT UNIQUE NOT NULL,
-      proyecto TEXT NOT NULL,
-      ubicacion TEXT,
-      empresa TEXT NOT NULL,
-      clasificacion TEXT NOT NULL,
-      tipo TEXT DEFAULT 'Certificación y validación intumescente',
-      espesor TEXT,
-      estado TEXT DEFAULT 'vigente',
-      fecha_emision DATE DEFAULT CURRENT_DATE,
-      pdf_nombre TEXT,
-      pdf_data BYTEA,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-}
+async function initDb() {}
 
 function requireAuth(req, res, next) {
   const token = req.cookies.amtc_token;
@@ -119,8 +95,7 @@ app.get('/verifica/:codigo', async (req, res) => {
   res.send(layout(`Verificación ${c.codigo}`, `<div class="brand"><div><h1>AMTC SpA</h1><div class="muted">Sistema de Verificación de Certificados Técnicos</div></div></div><div class="status ok">✔ CERTIFICADO VÁLIDO Y VIGENTE</div><div class="grid"><div><table><tr><th>Código de verificación</th><td>${safe(c.codigo)}</td></tr><tr><th>Proyecto</th><td>${safe(c.proyecto)}</td></tr><tr><th>Ubicación</th><td>${safe(c.ubicacion)}</td></tr><tr><th>Empresa / destinatario</th><td>${safe(c.empresa)}</td></tr><tr><th>Clasificación</th><td>${safe(c.clasificacion)}</td></tr><tr><th>Tipo</th><td>${safe(c.tipo)}</td></tr><tr><th>Espesor / observación</th><td>${safe(c.espesor)}</td></tr><tr><th>Fecha emisión</th><td>${safe(c.fecha_emision ? new Date(c.fecha_emision).toLocaleDateString('es-CL') : '')}</td></tr><tr><th>Estado</th><td>${safe(c.estado)}</td></tr><tr><th>Fecha consulta</th><td>${new Date().toLocaleString('es-CL')}</td></tr></table><p><a class="btn" href="/pdf/${safe(c.codigo)}" target="_blank">Descargar informe PDF</a></p></div><div class="qr"><img src="${qr}"><div class="muted">Escanee para verificar autenticidad</div></div></div><div class="footer">Este documento ha sido registrado por AMTC SpA. Su autenticidad puede ser verificada mediante el código único en esta plataforma. Cualquier alteración o falsificación invalida su validez técnica.</div>`));
 });
 
-app.get('/pdf/:codigo', async (req, res) => {
-  const result = await pool.query('SELECT pdf_nombre, pdf_data FROM certificados WHERE codigo=$1', [req.params.codigo]);
+app.get('/pdf/:codigo', async (req, res) => {;
   if (!result.rows.length || !result.rows[0].pdf_data) return res.status(404).send('PDF no encontrado');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${result.rows[0].pdf_nombre || 'certificado.pdf'}"`);
@@ -128,3 +103,50 @@ app.get('/pdf/:codigo', async (req, res) => {
 });
 
 initDb().then(() => app.listen(PORT, () => console.log(`AMTC listo en puerto ${PORT}`))).catch(err => { console.error(err); process.exit(1); });
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+let certificados = [];
+
+// Crear certificado
+app.post('/api/certificados', (req, res) => {
+
+  const codigo = `F60-AMTC-${Math.random().toString(36).substring(2,8).toUpperCase()}`;
+
+  const nuevo = {
+    codigo,
+    proyecto: req.body.proyecto,
+    empresa: req.body.empresa,
+    clasificacion: req.body.clasificacion,
+    estado: "vigente"
+  };
+
+  certificados.push(nuevo);
+
+  res.json({
+    codigo,
+    url: `https://amtcidiem.cl/verifica/${codigo}`
+  });
+});
+
+// Verificar
+app.get('/api/verifica/:codigo', (req, res) => {
+
+  const cert = certificados.find(c => c.codigo === req.params.codigo);
+
+  if(!cert){
+    return res.json({ estado:"invalido" });
+  }
+
+  res.json(cert);
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("AMTC funcionando en puerto " + PORT);
+});

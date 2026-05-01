@@ -43,3 +43,33 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("AMTC funcionando en puerto " + PORT);
 });
+app.get('/admin', (req, res) => {
+  res.send(`
+    <h2>AMTC - Crear Certificado</h2>
+
+    <input id="proyecto" placeholder="Proyecto"><br><br>
+    <input id="empresa" placeholder="Empresa"><br><br>
+    <input id="clasificacion" placeholder="F60"><br><br>
+
+    <button onclick="crear()">Crear Certificado</button>
+
+    <script>
+      function crear(){
+        fetch('/api/certificados', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            proyecto: document.getElementById('proyecto').value,
+            empresa: document.getElementById('empresa').value,
+            clasificacion: document.getElementById('clasificacion').value
+          })
+        })
+        .then(r => r.json())
+        .then(d => {
+          alert("Código: " + d.codigo);
+          window.open('/verifica/' + d.codigo);
+        });
+      }
+    </script>
+  `);
+});

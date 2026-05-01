@@ -2,96 +2,118 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 let certificados = [];
 
+// Página principal
+app.get('/', (req, res) => {
+  res.send(`
+    <div style="font-family: Arial; max-width: 700px; margin: auto; padding: 40px;">
+      <h1>AMTC SpA</h1>
+      <p>Sistema de Verificación de Certificados Técnicos</p>
+      <hr>
+      <p>Servidor funcionando correctamente.</p>
+      <a href="/admin">Ir al panel administrador</a>
+    </div>
+  `);
+});
+
+// Panel admin
+app.get('/admin', (req, res) => {
+  res.send(`
+    <div style="font-family: Arial; max-width: 700px; margin: auto; padding: 40px;">
+      <h1>AMTC - Crear Certificado</h1>
+
+      <input id="proyecto" placeholder="Proyecto" style="width:100%; padding:10px; margin-bottom:10px;"><br>
+      <input id="empresa" placeholder="Empresa" style="width:100%; padding:10px; margin-bottom:10px;"><br>
+      <input id="clasificacion" placeholder="Clasificación F60" style="width:100%; padding:10px; margin-bottom:10px;"><br>
+
+      <button onclick="crear()" style="padding:10px 20px;">Crear Certificado</button>
+
+      <div id="resultado" style="margin-top:20px;"></div>
+
+      <script>
+        function crear() {
+          fetch('/api/certificados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              proyecto: document.getElementById('proyecto').value,
+              empresa: document.getElementById('empresa').value,
+              clasificacion: document.getElementById('clasificacion').value
+            })
+          })
+          .then(r => r.json())
+          .then(d => {
+            document.getElementById('resultado').innerHTML =
+              '<h3>Certificado creado</h3>' +
+              '<p><b>Código:</b> ' + d.codigo + '</p>' +
+              '<p><a target="_blank" href="/verifica/' + d.codigo + '">Abrir verificación</a></p>';
+          });
+        }
+      </script>
+    </div>
+  `);
+});
+
 // Crear certificado
 app.post('/api/certificados', (req, res) => {
-  const codigo = `F60-AMTC-${Math.random().toString(36).substring(2,8).toUpperCase()}`;
+  const codigo = `F60-AMTC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   const nuevo = {
-    codigo,
-    proyecto: req.body.proyecto,
-    empresa: req.body.empresa,
-    clasificacion: req.body.clasificacion,
-    estado: "vigente"
+    codigo: codigo,
+    proyecto: req.body.proyecto || 'Sin proyecto',
+    empresa: req.body.empresa || 'Sin empresa',
+    clasificacion: req.body.clasificacion || 'F60',
+    estado: 'Vigente'
   };
 
   certificados.push(nuevo);
 
   res.json({
-    codigo,
-    url: `https://amtcidiem.cl/verifica/${codigo}`
+    codigo: nuevo.codigo,
+    url: `/verifica/${nuevo.codigo}`
   });
 });
 
-// Verificar
+// API verificar
 app.get('/api/verifica/:codigo', (req, res) => {
   const cert = certificados.find(c => c.codigo === req.params.codigo);
 
-  if(!cert){
-    return res.json({ estado:"invalido" });
+  if (!cert) {
+    return res.json({ estado: 'invalido' });
   }
 
   res.json(cert);
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("AMTC funcionando en puerto " + PORT);
-});
-app.get('/admin', (req, res) => {
-  res.send(`
-    <h2>AMTC - Crear Certificado</h2>
-
-    <input id="proyecto" placeholder="Proyecto"><br><br>
-    <input id="empresa" placeholder="Empresa"><br><br>
-    <input id="clasificacion" placeholder="F60"><br><br>
-
-    <button onclick="crear()">Crear Certificado</button>
-
-    <script>
-      function crear(){
-        fetch('/api/certificados', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            proyecto: document.getElementById('proyecto').value,
-            empresa: document.getElementById('empresa').value,
-            clasificacion: document.getElementById('clasificacion').value
-          })
-        })
-        .then(r => r.json())
-        .then(d => {
-          alert("Código: " + d.codigo);
-          window.open('/verifica/' + d.codigo);
-        });
-      }
-    </script>
-  `);
-});
+// Página de verificación
 app.get('/verifica/:codigo', (req, res) => {
-
   const codigo = req.params.codigo;
-
   const cert = certificados.find(c => c.codigo === codigo);
 
-  if(!cert){
-    return res.send("<h2>❌ Certificado no válido</h2>");
+  if (!cert) {
+    return res.send(`
+      <div style="font-family: Arial; max-width: 700px; margin: auto; padding: 40px;">
+        <h1>AMTC SpA</h1>
+        <h2 style="color:red;">❌ Certificado no válido</h2>
+        <p>El código ingresado no existe en el sistema.</p>
+        <p><b>Código consultado:</b> ${codigo}</p>
+      </div>
+    `);
   }
 
   res.send(`
-    <div style="font-family: Arial; max-width:600px; margin:auto; padding:40px;">
-      
-      <h2 style="text-align:center;">AMTC SpA</h2>
-      <p style="text-align:center;">Verificación de Certificado</p>
+    <div style="font-family: Arial; max-width: 700px; margin: auto; padding: 40px;">
+      <h1 style="text-align:center;">AMTC SpA</h1>
+      <p style="text-align:center;">Sistema de Verificación de Certificados Técnicos</p>
 
       <hr>
 
-      <h3 style="color:green;">✔ Certificado Válido</h3>
+      <h2 style="color:green;">✔ Certificado Válido</h2>
 
       <p><b>Código:</b> ${cert.codigo}</p>
       <p><b>Proyecto:</b> ${cert.proyecto}</p>
@@ -101,37 +123,16 @@ app.get('/verifica/:codigo', (req, res) => {
 
       <hr>
 
-      <p style="font-size:12px;">
-      Este certificado ha sido validado por AMTC SpA.
+      <p style="font-size:13px;">
+        Este certificado ha sido validado por AMTC SpA. 
+        Su autenticidad puede ser verificada mediante este código único.
       </p>
-
     </div>
   `);
-
 });
 
-  const codigo = req.params.codigo;
+const PORT = process.env.PORT || 3000;
 
-  res.send(`
-    <div style="font-family: Arial; max-width:600px; margin:auto; padding:40px;">
-      
-      <h2 style="text-align:center;">AMTC SpA</h2>
-      <p style="text-align:center;">Verificación de Certificado</p>
-
-      <hr>
-
-      <h3 style="color:green;">✔ Certificado Válido</h3>
-
-      <p><b>Código:</b> ${codigo}</p>
-      <p><b>Estado:</b> Vigente</p>
-
-      <hr>
-
-      <p style="font-size:12px;">
-      Este certificado ha sido validado por AMTC SpA.
-      </p>
-
-    </div>
-  `);
-
+app.listen(PORT, () => {
+  console.log('AMTC funcionando en puerto ' + PORT);
 });

@@ -73,3 +73,30 @@ app.get('/admin', (req, res) => {
     </script>
   `);
 });
+app.get('/verifica/:codigo', (req, res) => {
+
+  const codigo = req.params.codigo;
+
+  res.send(`
+    <div style="font-family: Arial; max-width:600px; margin:auto; padding:40px;">
+      
+      <h2 style="text-align:center;">AMTC SpA</h2>
+      <p style="text-align:center;">Verificación de Certificado</p>
+
+      <hr>
+
+      <h3 style="color:green;">✔ Certificado Válido</h3>
+
+      <p><b>Código:</b> ${codigo}</p>
+      <p><b>Estado:</b> Vigente</p>
+
+      <hr>
+
+      <p style="font-size:12px;">
+      Este certificado ha sido validado por AMTC SpA.
+      </p>
+
+    </div>
+  `);
+
+});

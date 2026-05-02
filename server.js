@@ -329,7 +329,7 @@ app.get('/verifica/:codigo', (req, res) => {
         <p><b>Ubicación:</b> ${cert.ubicacion}</p>
         <p><b>Clasificación:</b> ${cert.clasificacion}</p>
         <p><b>Estado:</b> Vigente</p>
-        <p><b>Fecha:</b> ${cert.fecha || '02-05-2026'}</p>
+        <p><b>Fecha:</b> ${cert.fecha || '24-04-2026'}</p>
       </div>
 
     </body>

@@ -300,131 +300,131 @@ app.get('/pdf/:codigo', async (req, res) => {
   const qr = await QRCode.toDataURL(url);
 
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename="${cert.codigo}.pdf"`);
 
-  const doc = new PDFDocument({ size: 'A4', margin: 45 });
+  const doc = new PDFDocument({ size: 'A4', margin: 50 });
   doc.pipe(res);
 
-  const logoPath = path.join(__dirname, 'public', 'logo.png');
+  const logo = path.join(__dirname, 'public', 'logo.png');
 
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 45, 35, { width: 230 });
+  // ===== PORTADA =====
+  if (fs.existsSync(logo)) {
+    doc.image(logo, 50, 40, { width: 220 });
   }
 
-  doc.moveDown(6);
+  doc.moveDown(5);
 
-  doc.fontSize(20).fillColor('black').text('INFORME TÉCNICO DE CERTIFICACIÓN', {
-    align: 'right'
-  });
-
-  doc.fontSize(15).text('PINTURA INTUMESCENTE', {
-    align: 'right'
-  });
+  doc.fontSize(18).text('INFORME DE INSPECCIÓN', { align: 'right' });
+  doc.fontSize(14).text('PINTURA INTUMESCENTE', { align: 'right' });
 
   doc.moveDown();
 
-  doc.fontSize(11).fillColor('red').text(`Informe N° ${cert.codigo}`, {
-    align: 'right'
-  });
-
-  doc.fillColor('black').text(`Fecha de emisión: ${cert.fecha}`, {
-    align: 'right'
-  });
+  doc.fillColor('red').text(`Informe N° ${cert.codigo}`, { align: 'right' });
+  doc.fillColor('black').text(`Fecha: 24/04/2026`, { align: 'right' });
 
   doc.moveDown(2);
 
-  doc.moveTo(45, doc.y).lineTo(550, doc.y).strokeColor('red').stroke();
-  doc.moveDown();
-
-  doc.fontSize(14).fillColor('black').text('1. DATOS DEL CERTIFICADO', {
-    underline: true
-  });
-
-  doc.moveDown();
-
-  doc.fontSize(11);
-  doc.text(`Código: ${cert.codigo}`);
-  doc.text(`Proyecto: ${cert.proyecto}`);
+  doc.fontSize(13).text(`Obra: ${cert.proyecto}`);
   doc.text(`Empresa: ${cert.empresa}`);
   doc.text(`Ubicación: ${cert.ubicacion}`);
-  doc.text(`Clasificación: ${cert.clasificacion}`);
-  doc.text(`Estado: ${cert.estado}`);
 
-  doc.moveDown(2);
+  doc.moveDown(3);
 
-  doc.fontSize(14).text('2. ALCANCE', { underline: true });
-  doc.moveDown();
-
-  doc.fontSize(11).text(
-    'El presente documento corresponde a la validación técnica del sistema de pintura intumescente aplicado en el proyecto indicado, asociado a la protección pasiva contra incendios en elementos estructurales metálicos.'
-  );
-
-  doc.moveDown(2);
-
-  doc.fontSize(14).text('3. RESUMEN TÉCNICO', { underline: true });
-  doc.moveDown();
-
-  doc.fontSize(11).text('Sistema evaluado: Pintura intumescente sobre estructura metálica.');
-  doc.text(`Clasificación declarada: ${cert.clasificacion}.`);
-  doc.text('Resultado: Certificado válido y vigente.');
-  doc.text('Verificación: Disponible mediante código único y QR.');
-
-  doc.moveDown(2);
-
-  doc.fontSize(14).text('4. CONCLUSIÓN', { underline: true });
-  doc.moveDown();
-
-  doc.fontSize(11).text(
-    'De acuerdo con los antecedentes técnicos disponibles y la información registrada en el sistema de verificación documental, el certificado se encuentra vigente y puede ser validado en línea mediante su código único.'
-  );
-
-  doc.moveDown(4);
-
-  doc.text('____________________________');
-  doc.text('Inspector Técnico AMTC SpA');
+  doc.fontSize(10).text('División Tecnología de la Construcción');
+  doc.text('Unidad de Inspección Técnica');
 
   doc.addPage();
 
-  doc.fontSize(18).text('VERIFICACIÓN DE AUTENTICIDAD', { align: 'center' });
-  doc.moveDown(2);
+  // ===== ALCANCE =====
+  doc.fontSize(14).text('1. ALCANCE', { underline: true });
 
-  doc.fontSize(12).text(
-    'Este certificado puede ser verificado en línea mediante el siguiente enlace:',
-    { align: 'center' }
+  doc.moveDown();
+  doc.fontSize(11).text(
+    `El presente informe técnico tiene como objetivo verificar las características del sistema de pintura intumescente aplicado en la obra "${cert.proyecto}".`
   );
 
   doc.moveDown();
 
-  doc.fillColor('red').fontSize(13).text(url, { align: 'center' });
-  doc.fillColor('black');
+  doc.text('Los objetivos de inspección son:');
+  doc.text('1. Verificar características intumescentes.');
+  doc.text('2. Detectar contaminación.');
+  doc.text('3. Medir espesores aplicados.');
+
+  // ===== METODOLOGÍA =====
+  doc.addPage();
+
+  doc.fontSize(14).text('2. METODOLOGÍA', { underline: true });
+
+  doc.moveDown();
+  doc.fontSize(11).text('Se realizaron las siguientes actividades:');
+  doc.text('- Inspección visual.');
+  doc.text('- Ensayo de intumescencia.');
+  doc.text('- Ensayo químico.');
+  doc.text('- Medición de espesores.');
+
+  // ===== INSPECCIÓN =====
+  doc.addPage();
+
+  doc.fontSize(14).text('3. INSPECCIÓN', { underline: true });
+
+  doc.moveDown();
+  doc.fontSize(11).text(
+    'La inspección fue realizada el día 24 de abril de 2026.'
+  );
+
+  doc.text(
+    'Se verificó el correcto estado del sistema de pintura intumescente aplicado sobre estructura metálica.'
+  );
+
+  // ===== RESULTADOS =====
+  doc.addPage();
+
+  doc.fontSize(14).text('4. RESULTADOS', { underline: true });
+
+  doc.moveDown();
+  doc.fontSize(11).text('Prueba de intumescencia: Cumple.');
+  doc.text('Ensayo químico: Sin contaminación.');
+  doc.text('Espesores: Dentro de rango aceptable.');
+
+  // ===== CONCLUSIÓN =====
+  doc.addPage();
+
+  doc.fontSize(14).text('5. CONCLUSIONES', { underline: true });
+
+  doc.moveDown();
+  doc.fontSize(11).text(
+    'El sistema de pintura intumescente cumple con los requisitos técnicos establecidos.'
+  );
+
+  doc.text(
+    `Clasificación de resistencia al fuego verificada: ${cert.clasificacion}`
+  );
+
+  doc.moveDown(3);
+
+  doc.text('____________________________');
+  doc.text('Inspector Técnico');
+  doc.text('AMTC SpA');
+
+  // ===== QR =====
+  doc.addPage();
+
+  doc.fontSize(16).text('VERIFICACIÓN DIGITAL', { align: 'center' });
 
   doc.moveDown(2);
 
-  doc.fontSize(12).text('También puede escanear el siguiente código QR:', {
-    align: 'center'
-  });
+  doc.fontSize(12).text(url, { align: 'center' });
 
   const qrData = qr.replace(/^data:image\/png;base64,/, '');
   const qrBuffer = Buffer.from(qrData, 'base64');
 
-  doc.image(qrBuffer, 210, 300, { width: 180 });
+  doc.image(qrBuffer, 200, 250, { width: 180 });
 
   doc.moveDown(12);
 
-  doc.fontSize(11).text(`Código de verificación: ${cert.codigo}`, {
-    align: 'center'
-  });
-
-  doc.moveDown();
-
-  doc.fontSize(10).text(
-    'AMTC SpA - Sistema de Verificación de Certificados Técnicos',
-    { align: 'center' }
-  );
+  doc.text(`Código: ${cert.codigo}`, { align: 'center' });
 
   doc.end();
 });
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

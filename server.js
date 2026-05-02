@@ -1,12 +1,27 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-let certificados = [];
+const archivoCertificados = path.join(__dirname, 'certificados.json');
+
+function cargarCertificados() {
+  if (!fs.existsSync(archivoCertificados)) {
+    fs.writeFileSync(archivoCertificados, JSON.stringify([]));
+  }
+
+  const data = fs.readFileSync(archivoCertificados, 'utf8');
+  return JSON.parse(data);
+}
+
+function guardarCertificados(certificados) {
+  fs.writeFileSync(archivoCertificados, JSON.stringify(certificados, null, 2));
+}
 
 // Página principal
 app.get('/', (req, res) => {
@@ -51,7 +66,8 @@ app.get('/admin', (req, res) => {
             document.getElementById('resultado').innerHTML =
               '<h3>Certificado creado</h3>' +
               '<p><b>Código:</b> ' + d.codigo + '</p>' +
-              '<p><a target="_blank" href="/verifica/' + d.codigo + '">Abrir verificación</a></p>';
+              '<p><a target="_blank" href="/verifica/' + d.codigo + '">Abrir verificación</a></p>' +
+              '<p><b>Link:</b> https://amtcidiem.cl/verifica/' + d.codigo + '</p>';
           });
         }
       </script>
@@ -61,17 +77,21 @@ app.get('/admin', (req, res) => {
 
 // Crear certificado
 app.post('/api/certificados', (req, res) => {
+  const certificados = cargarCertificados();
+
   const codigo = `F60-AMTC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   const nuevo = {
-    codigo: codigo,
+    codigo,
     proyecto: req.body.proyecto || 'Sin proyecto',
     empresa: req.body.empresa || 'Sin empresa',
     clasificacion: req.body.clasificacion || 'F60',
-    estado: 'Vigente'
+    estado: 'Vigente',
+    fecha: new Date().toLocaleDateString('es-CL')
   };
 
   certificados.push(nuevo);
+  guardarCertificados(certificados);
 
   res.json({
     codigo: nuevo.codigo,
@@ -81,6 +101,7 @@ app.post('/api/certificados', (req, res) => {
 
 // API verificar
 app.get('/api/verifica/:codigo', (req, res) => {
+  const certificados = cargarCertificados();
   const cert = certificados.find(c => c.codigo === req.params.codigo);
 
   if (!cert) {
@@ -92,6 +113,7 @@ app.get('/api/verifica/:codigo', (req, res) => {
 
 // Página de verificación
 app.get('/verifica/:codigo', (req, res) => {
+  const certificados = cargarCertificados();
   const codigo = req.params.codigo;
   const cert = certificados.find(c => c.codigo === codigo);
 
@@ -120,6 +142,7 @@ app.get('/verifica/:codigo', (req, res) => {
       <p><b>Empresa:</b> ${cert.empresa}</p>
       <p><b>Clasificación:</b> ${cert.clasificacion}</p>
       <p><b>Estado:</b> ${cert.estado}</p>
+      <p><b>Fecha:</b> ${cert.fecha}</p>
 
       <hr>
 

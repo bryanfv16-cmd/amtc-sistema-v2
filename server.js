@@ -144,7 +144,7 @@ function layout(contenido) {
 app.get('/', (req, res) => {
   res.send(layout(`
     <div class="header">
-      <img src="/public/logo.png">
+      <img src="/public/logo.png" class="logo" />
       <h1>Sistema de Verificación de Certificados Técnicos</h1>
       <p>Certificación técnica y validación documental</p>
     </div>

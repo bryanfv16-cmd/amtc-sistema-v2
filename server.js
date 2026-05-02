@@ -11,6 +11,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'amtc2026';
+
 const archivoCertificados = path.join(__dirname, 'certificados.json');
 
 function cargarCertificados() {
@@ -22,6 +25,24 @@ function cargarCertificados() {
 
 function guardarCertificados(certificados) {
   fs.writeFileSync(archivoCertificados, JSON.stringify(certificados, null, 2));
+}
+
+function auth(req, res, next) {
+  const { user, pass } = req.query;
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    return next();
+  }
+
+  res.send(`
+    <div style="font-family:Arial;max-width:600px;margin:80px auto;text-align:center;">
+      <h1>AMTC SpA</h1>
+      <h2>Acceso restringido</h2>
+      <p>Debe ingresar con usuario y contraseña autorizados.</p>
+      <p>Ejemplo:</p>
+      <code>/admin?user=admin&pass=CLAVE</code>
+    </div>
+  `);
 }
 
 function layout(contenido) {
@@ -125,17 +146,14 @@ app.get('/', (req, res) => {
     <div class="header">
       <img src="/public/logo.png">
       <h1>Sistema de Verificación de Certificados Técnicos</h1>
-      <p>AMTC SpA</p>
+      <p>Certificación técnica y validación documental</p>
     </div>
 
-    <h2>Verificar certificado</h2>
+    <h2>Validar certificado</h2>
     <p>Ingrese el código único del certificado para validar su autenticidad.</p>
 
-    <input id="codigo" placeholder="Ej: F60-AMTC-C68HZ4">
+    <input id="codigo" placeholder="Ej: AMTC-2026-0001">
     <button onclick="verificar()">Verificar</button>
-
-    <br><br>
-    <a href="/admin">Panel administrador</a>
 
     <script>
       function verificar() {
@@ -150,7 +168,7 @@ app.get('/', (req, res) => {
   `));
 });
 
-app.get('/admin', (req, res) => {
+app.get('/admin', auth, (req, res) => {
   res.send(layout(`
     <div class="header">
       <img src="/public/logo.png">
@@ -195,7 +213,8 @@ app.get('/admin', (req, res) => {
 app.post('/api/certificados', (req, res) => {
   const certificados = cargarCertificados();
 
-  const codigo = `F60-AMTC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  const correlativo = String(certificados.length + 1).padStart(4, '0');
+  const codigo = `AMTC-2026-${correlativo}`;
 
   const nuevo = {
     codigo,
@@ -283,25 +302,44 @@ app.get('/pdf/:codigo', async (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${cert.codigo}.pdf"`);
 
-  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  const doc = new PDFDocument({ size: 'A4', margin: 45 });
   doc.pipe(res);
 
   const logoPath = path.join(__dirname, 'public', 'logo.png');
 
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 50, 40, { width: 230 });
+    doc.image(logoPath, 45, 35, { width: 230 });
   }
 
   doc.moveDown(6);
-  doc.fontSize(20).text('INFORME DE INSPECCIÓN', { align: 'right' });
-  doc.fontSize(16).text('PINTURA INTUMESCENTE', { align: 'right' });
+
+  doc.fontSize(20).fillColor('black').text('INFORME TÉCNICO DE CERTIFICACIÓN', {
+    align: 'right'
+  });
+
+  doc.fontSize(15).text('PINTURA INTUMESCENTE', {
+    align: 'right'
+  });
+
   doc.moveDown();
 
-  doc.fontSize(11).text(`Informe N° ${cert.codigo}`, { align: 'right' });
-  doc.text(`Fecha de emisión: ${cert.fecha}`, { align: 'right' });
+  doc.fontSize(11).fillColor('red').text(`Informe N° ${cert.codigo}`, {
+    align: 'right'
+  });
+
+  doc.fillColor('black').text(`Fecha de emisión: ${cert.fecha}`, {
+    align: 'right'
+  });
 
   doc.moveDown(2);
-  doc.fontSize(14).text('DATOS DEL CERTIFICADO', { underline: true });
+
+  doc.moveTo(45, doc.y).lineTo(550, doc.y).strokeColor('red').stroke();
+  doc.moveDown();
+
+  doc.fontSize(14).fillColor('black').text('1. DATOS DEL CERTIFICADO', {
+    underline: true
+  });
+
   doc.moveDown();
 
   doc.fontSize(11);
@@ -313,17 +351,37 @@ app.get('/pdf/:codigo', async (req, res) => {
   doc.text(`Estado: ${cert.estado}`);
 
   doc.moveDown(2);
-  doc.fontSize(14).text('RESUMEN TÉCNICO', { underline: true });
+
+  doc.fontSize(14).text('2. ALCANCE', { underline: true });
   doc.moveDown();
 
   doc.fontSize(11).text(
-    'Se deja constancia que el presente certificado corresponde a la validación técnica del sistema de pintura intumescente aplicado en el proyecto indicado, conforme a los antecedentes disponibles y criterios técnicos asociados a la clasificación declarada.'
+    'El presente documento corresponde a la validación técnica del sistema de pintura intumescente aplicado en el proyecto indicado, asociado a la protección pasiva contra incendios en elementos estructurales metálicos.'
   );
 
+  doc.moveDown(2);
+
+  doc.fontSize(14).text('3. RESUMEN TÉCNICO', { underline: true });
   doc.moveDown();
-  doc.text('Resultado: Certificado válido y vigente.');
-  doc.text('Sistema: Pintura intumescente sobre estructura metálica.');
+
+  doc.fontSize(11).text('Sistema evaluado: Pintura intumescente sobre estructura metálica.');
   doc.text(`Clasificación declarada: ${cert.clasificacion}.`);
+  doc.text('Resultado: Certificado válido y vigente.');
+  doc.text('Verificación: Disponible mediante código único y QR.');
+
+  doc.moveDown(2);
+
+  doc.fontSize(14).text('4. CONCLUSIÓN', { underline: true });
+  doc.moveDown();
+
+  doc.fontSize(11).text(
+    'De acuerdo con los antecedentes técnicos disponibles y la información registrada en el sistema de verificación documental, el certificado se encuentra vigente y puede ser validado en línea mediante su código único.'
+  );
+
+  doc.moveDown(4);
+
+  doc.text('____________________________');
+  doc.text('Inspector Técnico AMTC SpA');
 
   doc.addPage();
 
@@ -336,11 +394,15 @@ app.get('/pdf/:codigo', async (req, res) => {
   );
 
   doc.moveDown();
+
   doc.fillColor('red').fontSize(13).text(url, { align: 'center' });
   doc.fillColor('black');
 
   doc.moveDown(2);
-  doc.fontSize(12).text('También puede escanear el siguiente código QR:', { align: 'center' });
+
+  doc.fontSize(12).text('También puede escanear el siguiente código QR:', {
+    align: 'center'
+  });
 
   const qrData = qr.replace(/^data:image\/png;base64,/, '');
   const qrBuffer = Buffer.from(qrData, 'base64');
@@ -348,9 +410,13 @@ app.get('/pdf/:codigo', async (req, res) => {
   doc.image(qrBuffer, 210, 300, { width: 180 });
 
   doc.moveDown(12);
-  doc.fontSize(11).text(`Código de verificación: ${cert.codigo}`, { align: 'center' });
+
+  doc.fontSize(11).text(`Código de verificación: ${cert.codigo}`, {
+    align: 'center'
+  });
 
   doc.moveDown();
+
   doc.fontSize(10).text(
     'AMTC SpA - Sistema de Verificación de Certificados Técnicos',
     { align: 'center' }

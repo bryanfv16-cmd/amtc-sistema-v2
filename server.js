@@ -342,7 +342,7 @@ app.get('/pdf/:codigo', async (req, res) => {
   doc.moveDown(2);
   doc.fontSize(12).text('También puede escanear el siguiente código QR:', { align: 'center' });
 
-  const qrData = qr.replace(/^data:image\\/png;base64,/, '');
+  const qrData = qr.replace(/^data:image\/png;base64,/, '');
   const qrBuffer = Buffer.from(qrData, 'base64');
 
   doc.image(qrBuffer, 210, 300, { width: 180 });

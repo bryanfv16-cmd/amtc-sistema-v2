@@ -250,44 +250,44 @@ app.get('/verifica/:codigo', (req, res) => {
   const cert = certificados.find(c => c.codigo === req.params.codigo);
 
   if (!cert) {
-    return res.send(layout(`
-      <div class="header">
-        <img src="/public/logo.png">
-        <h1>Verificación de Certificado</h1>
-      </div>
-
-      <div class="status-error">❌ Certificado no válido</div>
-      <p>El código ingresado no existe en el sistema.</p>
-      <p><b>Código consultado:</b> ${req.params.codigo}</p>
-    `));
+    return res.send(`
+      <h2 style="color:red; text-align:center;">❌ Certificado no válido</h2>
+    `);
   }
 
-  res.send(layout(`
-    <div class="header">
-      <img src="/public/logo.png">
-      <h1>Verificación de Certificado Técnico</h1>
-      <p>Sistema oficial de validación documental</p>
-    </div>
-
-    <div class="status-ok">✔ Certificado Válido</div>
-
-    <div class="box">
-      <div class="row"><span class="label">Código:</span> ${cert.codigo}</div>
-      <div class="row"><span class="label">Proyecto:</span> ${cert.proyecto}</div>
-      <div class="row"><span class="label">Empresa:</span> ${cert.empresa}</div>
-      <div class="row"><span class="label">Ubicación:</span> ${cert.ubicacion}</div>
-      <div class="row"><span class="label">Clasificación:</span> ${cert.clasificacion}</div>
-      <div class="row"><span class="label">Estado:</span> ${cert.estado}</div>
-      <div class="row"><span class="label">Fecha:</span> ${cert.fecha}</div>
-    </div>
-
-    <br>
-    <a class="btn" href="/pdf/${cert.codigo}" target="_blank">Descargar PDF profesional</a>
-
-    <div class="footer">
-      Este certificado ha sido validado por AMTC SpA. Su autenticidad puede ser verificada mediante este código único.
-    </div>
-  `));
+  res.send(`
+    <html>
+    <head>
+      <title>Verificación de Certificado</title>
+      <style>
+        body {
+          font-family: Arial;
+          text-align: center;
+          padding: 50px;
+          background: #f4f4f4;
+        }
+        .card {
+          background: white;
+          padding: 40px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          display: inline-block;
+        }
+        h1 { color: green; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>✔ Certificado Válido</h1>
+        <p><b>Código:</b> ${cert.codigo}</p>
+        <p><b>Proyecto:</b> ${cert.proyecto}</p>
+        <p><b>Empresa:</b> ${cert.empresa}</p>
+        <p><b>Clasificación:</b> ${cert.clasificacion}</p>
+        <p><b>Estado:</b> Vigente</p>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.get('/pdf/:codigo', async (req, res) => {

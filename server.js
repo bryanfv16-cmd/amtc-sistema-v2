@@ -269,22 +269,35 @@ app.get('/verifica/:codigo', (req, res) => {
         .card {
           background: white;
           padding: 40px;
-          border-radius: 10px;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          border-radius: 12px;
+          box-shadow: 0 0 15px rgba(0,0,0,0.1);
           display: inline-block;
+          width: 400px;
+        }
+        .logo {
+          width: 180px;
+          margin-bottom: 20px;
         }
         h1 { color: green; }
       </style>
     </head>
     <body>
+
       <div class="card">
+
+        <!-- 🔥 LOGO AQUÍ -->
+        <img src="/logo.png" class="logo"/>
+
         <h1>✔ Certificado Válido</h1>
+
         <p><b>Código:</b> ${cert.codigo}</p>
         <p><b>Proyecto:</b> ${cert.proyecto}</p>
         <p><b>Empresa:</b> ${cert.empresa}</p>
         <p><b>Clasificación:</b> ${cert.clasificacion}</p>
         <p><b>Estado:</b> Vigente</p>
+
       </div>
+
     </body>
     </html>
   `);

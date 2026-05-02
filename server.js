@@ -236,15 +236,6 @@ app.post('/api/certificados', (req, res) => {
   });
 });
 
-app.get('/api/verifica/:codigo', (req, res) => {
-  const certificados = cargarCertificados();
-  const cert = certificados.find(c => c.codigo === req.params.codigo);
-
-  if (!cert) return res.json({ estado: 'invalido' });
-
-  res.json(cert);
-});
-
 app.get('/verifica/:codigo', (req, res) => {
   const certificados = cargarCertificados();
   const cert = certificados.find(c => c.codigo === req.params.codigo);
@@ -262,47 +253,89 @@ app.get('/verifica/:codigo', (req, res) => {
       <style>
         body {
           font-family: Arial;
-          text-align: center;
-          padding: 50px;
           background: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          text-align: center;
         }
-        .card {
-          background: white;
-          padding: 40px;
-          border-radius: 12px;
-          box-shadow: 0 0 15px rgba(0,0,0,0.1);
-          display: inline-block;
-          width: 400px;
+
+        .header {
+          margin-top: 30px;
         }
+
         .logo {
-          width: 180px;
+          width: 300px;
+        }
+
+        h1 {
+          margin-top: 20px;
+          font-size: 28px;
+        }
+
+        .subtitle {
+          color: #555;
           margin-bottom: 20px;
         }
-        h1 { color: green; }
+
+        .line {
+          width: 80%;
+          height: 4px;
+          background: #d60000;
+          margin: 20px auto;
+        }
+
+        .status {
+          color: green;
+          font-size: 28px;
+          font-weight: bold;
+          text-align: left;
+          width: 80%;
+          margin: auto;
+        }
+
+        .card {
+          width: 80%;
+          margin: 20px auto;
+          background: #eee;
+          padding: 25px;
+          border-radius: 8px;
+          text-align: left;
+          font-size: 16px;
+        }
+
+        b {
+          display: inline-block;
+          width: 120px;
+        }
       </style>
     </head>
+
     <body>
 
+      <div class="header">
+        <img src="/logo.png" class="logo" />
+        <h1>Verificación de Certificado Técnico</h1>
+        <div class="subtitle">Sistema oficial de validación documental</div>
+      </div>
+
+      <div class="line"></div>
+
+      <div class="status">✔ Certificado Válido</div>
+
       <div class="card">
-
-        <!-- 🔥 LOGO AQUÍ -->
-        <img src="/logo.png" class="logo"/>
-
-        <h1>✔ Certificado Válido</h1>
-
         <p><b>Código:</b> ${cert.codigo}</p>
         <p><b>Proyecto:</b> ${cert.proyecto}</p>
         <p><b>Empresa:</b> ${cert.empresa}</p>
+        <p><b>Ubicación:</b> ${cert.ubicacion}</p>
         <p><b>Clasificación:</b> ${cert.clasificacion}</p>
         <p><b>Estado:</b> Vigente</p>
-
+        <p><b>Fecha:</b> ${cert.fecha || '02-05-2026'}</p>
       </div>
 
     </body>
     </html>
   `);
 });
-
 app.get('/pdf/:codigo', async (req, res) => {
   const certificados = cargarCertificados();
   const cert = certificados.find(c => c.codigo === req.params.codigo);

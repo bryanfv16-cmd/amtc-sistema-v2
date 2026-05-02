@@ -258,62 +258,43 @@ app.get('/verifica/:codigo', (req, res) => {
           padding: 0;
           text-align: center;
         }
-
-        .header {
-          margin-top: 30px;
-        }
-
-        .logo {
-          width: 300px;
-        }
-
-        h1 {
-          margin-top: 20px;
-          font-size: 28px;
-        }
-
-        .subtitle {
-          color: #555;
-          margin-bottom: 20px;
-        }
-
+        .header { margin-top: 30px; }
+        .logo { width: 420px; max-width: 90%; }
+        h1 { margin-top: 20px; font-size: 28px; }
+        .subtitle { color: #555; margin-bottom: 20px; }
         .line {
-          width: 80%;
+          width: 90%;
           height: 4px;
           background: #d60000;
-          margin: 20px auto;
+          margin: 25px auto;
         }
-
         .status {
           color: green;
-          font-size: 28px;
+          font-size: 30px;
           font-weight: bold;
           text-align: left;
-          width: 80%;
+          width: 90%;
           margin: auto;
         }
-
         .card {
-          width: 80%;
-          margin: 20px auto;
+          width: 90%;
+          margin: 25px auto;
           background: #eee;
           padding: 25px;
           border-radius: 8px;
           text-align: left;
-          font-size: 16px;
+          font-size: 18px;
         }
-
         b {
           display: inline-block;
-          width: 120px;
+          width: 150px;
         }
       </style>
     </head>
-
     <body>
 
       <div class="header">
-        <img src="/logo.png" class="logo" />
+        <img src="/public/logo.png" class="logo" />
         <h1>Verificación de Certificado Técnico</h1>
         <div class="subtitle">Sistema oficial de validación documental</div>
       </div>
@@ -329,7 +310,7 @@ app.get('/verifica/:codigo', (req, res) => {
         <p><b>Ubicación:</b> ${cert.ubicacion}</p>
         <p><b>Clasificación:</b> ${cert.clasificacion}</p>
         <p><b>Estado:</b> Vigente</p>
-        <p><b>Fecha:</b> ${cert.fecha || '24-04-2026'}</p>
+        <p><b>Fecha:</b> 24/04/2026</p>
       </div>
 
     </body>

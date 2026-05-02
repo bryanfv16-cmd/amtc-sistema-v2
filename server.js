@@ -236,7 +236,7 @@ app.post('/api/certificados', (req, res) => {
   });
 });
 
-app.get('/verifica/:codigo', (req, res) => {
+<img src="https://amtcidiem.cl/public/logo.png?v=999" class="logo" />
   const certificados = cargarCertificados();
   const cert = certificados.find(c => c.codigo === req.params.codigo);
 

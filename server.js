@@ -24,67 +24,172 @@ function guardarCertificados(certificados) {
   fs.writeFileSync(archivoCertificados, JSON.stringify(certificados, null, 2));
 }
 
-app.get('/', (req, res) => {
-  res.send(`
-    <div style="font-family:Arial;max-width:800px;margin:auto;padding:40px;text-align:center;">
-      <img src="/public/logo.png" style="max-width:360px;margin-bottom:30px;">
-      <h1>AMTC SpA</h1>
-      <p>Sistema de Verificación de Certificados Técnicos</p>
-      <hr>
-      <h2>Verificar certificado</h2>
-      <input id="codigo" placeholder="Ingrese código" style="padding:12px;width:70%;">
-      <button onclick="verificar()" style="padding:12px;">Verificar</button>
-      <script>
-        function verificar(){
-          const codigo = document.getElementById('codigo').value.trim();
-          if(codigo) window.location.href = '/verifica/' + codigo;
-        }
-      </script>
-      <br><br>
-      <a href="/admin">Panel administrador</a>
+function layout(contenido) {
+  return `
+  <!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>AMTC - Verificación Técnica</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f3f4f6;
+        color: #222;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      }
+      .header {
+        text-align: center;
+        border-bottom: 4px solid #d71920;
+        padding-bottom: 25px;
+        margin-bottom: 30px;
+      }
+      .header img {
+        max-width: 420px;
+        margin-bottom: 20px;
+      }
+      h1, h2 {
+        margin: 10px 0;
+      }
+      .status-ok {
+        color: #008000;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .status-error {
+        color: #c00000;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .box {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 6px;
+        background: #fafafa;
+      }
+      .row {
+        margin: 12px 0;
+        font-size: 18px;
+      }
+      .label {
+        font-weight: bold;
+      }
+      input {
+        width: 70%;
+        padding: 14px;
+        font-size: 16px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+      }
+      button, .btn {
+        padding: 14px 22px;
+        background: #d71920;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .footer {
+        margin-top: 35px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        font-size: 13px;
+        color: #555;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      ${contenido}
     </div>
-  `);
+  </body>
+  </html>
+  `;
+}
+
+app.get('/', (req, res) => {
+  res.send(layout(`
+    <div class="header">
+      <img src="/public/logo.png">
+      <h1>Sistema de Verificación de Certificados Técnicos</h1>
+      <p>AMTC SpA</p>
+    </div>
+
+    <h2>Verificar certificado</h2>
+    <p>Ingrese el código único del certificado para validar su autenticidad.</p>
+
+    <input id="codigo" placeholder="Ej: F60-AMTC-C68HZ4">
+    <button onclick="verificar()">Verificar</button>
+
+    <br><br>
+    <a href="/admin">Panel administrador</a>
+
+    <script>
+      function verificar() {
+        const codigo = document.getElementById('codigo').value.trim();
+        if (codigo) window.location.href = '/verifica/' + codigo;
+      }
+    </script>
+
+    <div class="footer">
+      AMTC SpA - Sistema de Verificación de Certificados Técnicos
+    </div>
+  `));
 });
 
 app.get('/admin', (req, res) => {
-  res.send(`
-    <div style="font-family:Arial;max-width:800px;margin:auto;padding:40px;">
-      <img src="/public/logo.png" style="max-width:320px;margin-bottom:25px;">
-      <h1>AMTC - Crear Certificado</h1>
-
-      <input id="proyecto" placeholder="Proyecto" style="width:100%;padding:12px;margin-bottom:10px;">
-      <input id="empresa" placeholder="Empresa" style="width:100%;padding:12px;margin-bottom:10px;">
-      <input id="clasificacion" placeholder="Clasificación F60" style="width:100%;padding:12px;margin-bottom:10px;">
-      <input id="ubicacion" placeholder="Ubicación" style="width:100%;padding:12px;margin-bottom:10px;">
-
-      <button onclick="crear()" style="padding:12px 24px;">Crear Certificado</button>
-
-      <div id="resultado" style="margin-top:25px;"></div>
-
-      <script>
-        function crear() {
-          fetch('/api/certificados', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-              proyecto: proyecto.value,
-              empresa: empresa.value,
-              clasificacion: clasificacion.value,
-              ubicacion: ubicacion.value
-            })
-          })
-          .then(r => r.json())
-          .then(d => {
-            resultado.innerHTML =
-              '<h3>Certificado creado</h3>' +
-              '<p><b>Código:</b> ' + d.codigo + '</p>' +
-              '<p><a target="_blank" href="/verifica/' + d.codigo + '">Abrir verificación</a></p>' +
-              '<p><a target="_blank" href="/pdf/' + d.codigo + '">Descargar PDF profesional</a></p>';
-          });
-        }
-      </script>
+  res.send(layout(`
+    <div class="header">
+      <img src="/public/logo.png">
+      <h1>Panel Administrador</h1>
+      <p>Creación de certificados técnicos</p>
     </div>
-  `);
+
+    <input id="proyecto" placeholder="Proyecto"><br><br>
+    <input id="empresa" placeholder="Empresa"><br><br>
+    <input id="clasificacion" placeholder="Clasificación F60"><br><br>
+    <input id="ubicacion" placeholder="Ubicación"><br><br>
+
+    <button onclick="crear()">Crear Certificado</button>
+
+    <div id="resultado" class="box"></div>
+
+    <script>
+      function crear() {
+        fetch('/api/certificados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proyecto: proyecto.value,
+            empresa: empresa.value,
+            clasificacion: clasificacion.value,
+            ubicacion: ubicacion.value
+          })
+        })
+        .then(r => r.json())
+        .then(d => {
+          resultado.innerHTML =
+            '<h3>Certificado creado correctamente</h3>' +
+            '<p><b>Código:</b> ' + d.codigo + '</p>' +
+            '<p><a class="btn" target="_blank" href="/verifica/' + d.codigo + '">Abrir verificación</a></p>' +
+            '<p><a class="btn" target="_blank" href="/pdf/' + d.codigo + '">Descargar PDF profesional</a></p>';
+        });
+      }
+    </script>
+  `));
 });
 
 app.post('/api/certificados', (req, res) => {
@@ -126,44 +231,44 @@ app.get('/verifica/:codigo', (req, res) => {
   const cert = certificados.find(c => c.codigo === req.params.codigo);
 
   if (!cert) {
-    return res.send(`
-      <div style="font-family:Arial;max-width:800px;margin:auto;padding:40px;text-align:center;">
-        <img src="/public/logo.png" style="max-width:320px;margin-bottom:25px;">
-        <h1>AMTC SpA</h1>
-        <h2 style="color:red;">❌ Certificado no válido</h2>
-        <p>El código ingresado no existe en el sistema.</p>
-        <p><b>Código:</b> ${req.params.codigo}</p>
+    return res.send(layout(`
+      <div class="header">
+        <img src="/public/logo.png">
+        <h1>Verificación de Certificado</h1>
       </div>
-    `);
+
+      <div class="status-error">❌ Certificado no válido</div>
+      <p>El código ingresado no existe en el sistema.</p>
+      <p><b>Código consultado:</b> ${req.params.codigo}</p>
+    `));
   }
 
-  res.send(`
-    <div style="font-family:Arial;max-width:800px;margin:auto;padding:40px;">
-      <div style="text-align:center;">
-        <img src="/public/logo.png" style="max-width:360px;margin-bottom:20px;">
-        <h1>AMTC SpA</h1>
-        <p>Sistema de Verificación de Certificados Técnicos</p>
-      </div>
-
-      <hr>
-
-      <h2 style="color:green;">✔ Certificado Válido</h2>
-
-      <p><b>Código:</b> ${cert.codigo}</p>
-      <p><b>Proyecto:</b> ${cert.proyecto}</p>
-      <p><b>Empresa:</b> ${cert.empresa}</p>
-      <p><b>Ubicación:</b> ${cert.ubicacion}</p>
-      <p><b>Clasificación:</b> ${cert.clasificacion}</p>
-      <p><b>Estado:</b> ${cert.estado}</p>
-      <p><b>Fecha:</b> ${cert.fecha}</p>
-
-      <hr>
-
-      <p>Este certificado ha sido validado por AMTC SpA. Su autenticidad puede ser verificada mediante este código único.</p>
-
-      <p><a href="/pdf/${cert.codigo}" target="_blank">Descargar PDF profesional</a></p>
+  res.send(layout(`
+    <div class="header">
+      <img src="/public/logo.png">
+      <h1>Verificación de Certificado Técnico</h1>
+      <p>Sistema oficial de validación documental</p>
     </div>
-  `);
+
+    <div class="status-ok">✔ Certificado Válido</div>
+
+    <div class="box">
+      <div class="row"><span class="label">Código:</span> ${cert.codigo}</div>
+      <div class="row"><span class="label">Proyecto:</span> ${cert.proyecto}</div>
+      <div class="row"><span class="label">Empresa:</span> ${cert.empresa}</div>
+      <div class="row"><span class="label">Ubicación:</span> ${cert.ubicacion}</div>
+      <div class="row"><span class="label">Clasificación:</span> ${cert.clasificacion}</div>
+      <div class="row"><span class="label">Estado:</span> ${cert.estado}</div>
+      <div class="row"><span class="label">Fecha:</span> ${cert.fecha}</div>
+    </div>
+
+    <br>
+    <a class="btn" href="/pdf/${cert.codigo}" target="_blank">Descargar PDF profesional</a>
+
+    <div class="footer">
+      Este certificado ha sido validado por AMTC SpA. Su autenticidad puede ser verificada mediante este código único.
+    </div>
+  `));
 });
 
 app.get('/pdf/:codigo', async (req, res) => {
@@ -182,11 +287,12 @@ app.get('/pdf/:codigo', async (req, res) => {
   doc.pipe(res);
 
   const logoPath = path.join(__dirname, 'public', 'logo.png');
+
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 50, 40, { width: 220 });
+    doc.image(logoPath, 50, 40, { width: 230 });
   }
 
-  doc.moveDown(5);
+  doc.moveDown(6);
   doc.fontSize(20).text('INFORME DE INSPECCIÓN', { align: 'right' });
   doc.fontSize(16).text('PINTURA INTUMESCENTE', { align: 'right' });
   doc.moveDown();
@@ -243,6 +349,7 @@ app.get('/pdf/:codigo', async (req, res) => {
 
   doc.moveDown(12);
   doc.fontSize(11).text(`Código de verificación: ${cert.codigo}`, { align: 'center' });
+
   doc.moveDown();
   doc.fontSize(10).text(
     'AMTC SpA - Sistema de Verificación de Certificados Técnicos',
